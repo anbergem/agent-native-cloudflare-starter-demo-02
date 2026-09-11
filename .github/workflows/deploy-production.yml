@@ -1,0 +1,121 @@
+name: Deploy production
+on:
+  workflow_dispatch:
+    inputs:
+      staging_run_id:
+        description: Successful Deploy staging workflow run id
+        required: true
+        type: string
+      confirm:
+        description: Type deploy to promote this exact artifact
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  promote:
+    if: inputs.confirm == 'deploy' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
+      STAGING_RUN_ID: ${{ inputs.staging_run_id }}
+    steps:
+      - name: Validate run id
+        shell: bash
+        run: '[[ "$STAGING_RUN_ID" =~ ^[1-9][0-9]*$ ]]'
+      - name: Initialize temporary paths
+        run: |
+          {
+            echo "STAGING_RUN_JSON=$RUNNER_TEMP/staging-run.json"
+            echo "CI_RUN_JSON=$RUNNER_TEMP/ci-run.json"
+            echo "DEPLOYMENT_MANIFEST=$RUNNER_TEMP/deployment-manifest/deployment-manifest.json"
+            echo "TIME_TRAVEL_JSON=$RUNNER_TEMP/time-travel.json"
+            echo "PREVIOUS_DEPLOYMENTS_JSON=$RUNNER_TEMP/previous-deployments.json"
+          } >> "$GITHUB_ENV"
+      - name: Read staging run metadata
+        run: gh api "repos/$GITHUB_REPOSITORY/actions/runs/$STAGING_RUN_ID" > "$STAGING_RUN_JSON"
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/heads/main
+      - name: Download deployment manifest
+        run: >-
+          gh run download "$STAGING_RUN_ID" --repo "$GITHUB_REPOSITORY"
+          --name deployment-manifest --dir "$RUNNER_TEMP/deployment-manifest"
+      - name: Read source CI metadata
+        run: |
+          source_ci_run_id=""
+          source_ci_run_id="$(node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync(process.env.DEPLOYMENT_MANIFEST,"utf8")); if (!/^[1-9][0-9]*$/.test(String(p.sourceCiRunId))) process.exit(1); process.stdout.write(String(p.sourceCiRunId))')"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$source_ci_run_id" > "$CI_RUN_JSON"
+      - name: Validate trusted staging run
+        id: staging
+        run: node scripts/validate-staging-run.mjs
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.staging.outputs.sha }}
+          clean: true
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Download promoted bundle
+        env:
+          STAGING_SHA: ${{ steps.staging.outputs.sha }}
+        run: >-
+          gh run download "$STAGING_RUN_ID" --repo "$GITHUB_REPOSITORY"
+          --name "worker-bundle-$STAGING_SHA" --dir dist
+      - name: Verify promoted bundle
+        env:
+          ARTIFACT_DIR: dist
+          STAGING_SHA: ${{ steps.staging.outputs.sha }}
+        run: |
+          CHECKOUT_SHA="$(git rev-parse HEAD)"
+          export CHECKOUT_SHA
+          node scripts/verify-promotion-artifact.mjs
+      - name: Record Time Travel bookmark
+        run: |
+          pnpm exec wrangler d1 time-travel info example-jobs-production \
+            --env production --json > "$TIME_TRAVEL_JSON"
+          {
+            echo '### Pre-deploy D1 Time Travel bookmark'
+            echo '```json'
+            cat "$TIME_TRAVEL_JSON"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Record previous deployment
+        run: pnpm exec wrangler deployments list --env production --json > "$PREVIOUS_DEPLOYMENTS_JSON"
+      - run: pnpm db:migrate:production
+      - run: pnpm deploy:production
+      - run: node scripts/worker-smoke.mjs --base-url "$PRODUCTION_URL" --mode production
+      - name: Record rollback guidance
+        if: failure()
+        run: |
+          {
+            echo '### Rollback guidance'
+            echo 'Pre-deploy D1 Time Travel bookmark:'
+            echo '```json'
+            cat "$TIME_TRAVEL_JSON" 2>/dev/null || echo '{}'
+            echo '```'
+            echo 'Deployments before this promotion (the first id is the one to restore):'
+            echo '```json'
+            cat "$PREVIOUS_DEPLOYMENTS_JSON" 2>/dev/null || echo '[]'
+            echo '```'
+            echo 'Roll the Worker back with:'
+            echo '```bash'
+            echo 'pnpm exec wrangler rollback <version-id> --env production'
+            echo '```'
+            echo 'Restore D1 only if a migration corrupted data:'
+            echo '```bash'
+            echo 'pnpm exec wrangler d1 time-travel restore example-jobs-production --bookmark <bookmark>'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
