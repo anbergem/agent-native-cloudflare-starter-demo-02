@@ -38,7 +38,7 @@
       "vars": {
         "APP_ENV": "staging",
         "NODE_ENV": "production",
-        "APP_URL": "https://REPLACE_ME_STAGING_HOST",
+        "APP_URL": "https://acme-ops-staging.agent-native-cloudflare-starter.workers.dev",
         "AUTO_CREATE_DEFAULT_ORG": "0",
         "AUTH_REQUIRE_EMAIL_VERIFICATION": "0",
         "SEED_ENABLED": "1",
@@ -48,7 +48,7 @@
         {
           "binding": "DB",
           "database_name": "acme-ops-staging",
-          "database_id": "REPLACE_ME",
+          "database_id": "1e720096-b3bd-4561-abf7-ff7e81ae36f6",
           "migrations_dir": "migrations",
         },
       ],
@@ -58,7 +58,7 @@
       "vars": {
         "APP_ENV": "production",
         "NODE_ENV": "production",
-        "APP_URL": "https://REPLACE_ME_PRODUCTION_HOST",
+        "APP_URL": "https://acme-ops-production.agent-native-cloudflare-starter.workers.dev",
         "AUTO_CREATE_DEFAULT_ORG": "0",
         "AUTH_REQUIRE_EMAIL_VERIFICATION": "1",
         "AGENT_NATIVE_AUDIT_RETENTION_DAYS": "0",
@@ -67,7 +67,7 @@
         {
           "binding": "DB",
           "database_name": "acme-ops-production",
-          "database_id": "REPLACE_ME",
+          "database_id": "a5224873-369a-4560-9c81-cf7aa3d2b354",
           "migrations_dir": "migrations",
         },
       ],
