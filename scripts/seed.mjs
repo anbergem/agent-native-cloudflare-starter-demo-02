@@ -37,8 +37,8 @@ const repoRoot = path.resolve(
 );
 
 /** Worker and database base name (decision D18). Local D1 is always
- * `example-jobs-local`; a remote environment's database is `example-jobs-<env>`. */
-const BASE_NAME = "example-jobs";
+ * `acme-ops-local`; a remote environment's database is `acme-ops-<env>`. */
+const BASE_NAME = "acme-ops";
 
 const TARGETS = ["node", "d1-local", "d1-remote"];
 

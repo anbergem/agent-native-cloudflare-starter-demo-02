@@ -3,7 +3,7 @@
 Operational procedures. Command-oriented, meant to be readable at 2am.
 
 Every command below assumes `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are exported,
-and `<app>` is the Worker base name from `wrangler.jsonc` (`example-jobs` until the rename).
+and `<app>` is the Worker base name from `wrangler.jsonc` (`acme-ops` until the rename).
 Replace `<app>` and the hosts.
 
 **Before you touch anything:** write down what you observed and what time it is. Half of these

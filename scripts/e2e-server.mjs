@@ -24,7 +24,7 @@ const repoRoot = path.resolve(
   "..",
 );
 const baseUrl = "http://127.0.0.1:8787";
-const temporary = mkdtempSync(path.join(tmpdir(), "example-jobs-e2e-"));
+const temporary = mkdtempSync(path.join(tmpdir(), "acme-ops-e2e-"));
 const persistTo = path.join(temporary, "wrangler-state");
 const configFile = path.join(temporary, "wrangler.json");
 // Playwright passes this path explicitly (`--state-file`) so the reset helper
@@ -146,7 +146,7 @@ try {
   rmSync(stateFile, { force: true });
   await assertPortAvailable(8787);
   const config = {
-    name: "example-jobs-e2e",
+    name: "acme-ops-e2e",
     main: path.join(repoRoot, "dist/_worker.js/index.js"),
     compatibility_date: "2026-09-05",
     compatibility_flags: ["nodejs_compat"],
@@ -164,7 +164,7 @@ try {
     d1_databases: [
       {
         binding: "DB",
-        database_name: "example-jobs-local",
+        database_name: "acme-ops-local",
         database_id: "00000000-0000-0000-0000-000000000000",
         migrations_dir: path.join(repoRoot, "migrations"),
       },
@@ -177,7 +177,7 @@ try {
     "d1",
     "migrations",
     "apply",
-    "example-jobs-local",
+    "acme-ops-local",
     "--local",
     "--persist-to",
     persistTo,
@@ -217,7 +217,7 @@ try {
   await waitFor("/_agent-native/ping", worker);
   await waitFor("/_agent-native/health", worker);
 
-  const directory = mkdtempSync(path.join(tmpdir(), "example-jobs-e2e-seed-"));
+  const directory = mkdtempSync(path.join(tmpdir(), "acme-ops-e2e-seed-"));
   try {
     const sqlFile = path.join(directory, "scenario.sql");
     writeFileSync(sqlFile, `${scenarioSql().scenarioSql.join("\n")}\n`);
@@ -226,7 +226,7 @@ try {
       "wrangler",
       "d1",
       "execute",
-      "example-jobs-local",
+      "acme-ops-local",
       "--local",
       "--persist-to",
       persistTo,

@@ -32,12 +32,12 @@ const INITIAL_TOOL_NAMES = [
 ];
 
 export default createAgentChatPlugin({
-  appId: "example-jobs",
+  appId: "acme-ops",
   actions: loadActionsFromStaticRegistry(actionsRegistry),
   // D12: the app's own semantic actions plus the audit reader, and no raw
   // database access on any agent surface.
   frameworkTools: { preset: "minimal", database: "off", audit: true },
   initialToolNames: INITIAL_TOOL_NAMES,
   resolveOrgId: async (event) => (await getOrgContext(event)).orgId,
-  systemPrompt: `You operate the Example Jobs application on behalf of the signed-in user, and you do it only through this app's actions: every customer, job and history question is answered by calling an action, never from memory or guesswork, and you never fabricate an identifier, a status, a date or a result. After any write, re-read the affected record with the matching query action before you report what happened, and report exactly what that read returned — if an action fails, say so plainly and say what you would need to retry. Ask before anything destructive or irreversible, prefer narrow queries over fetching everything, and always answer in the language the user's interface is set to.`,
+  systemPrompt: `You operate the Acme Ops application on behalf of the signed-in user, and you do it only through this app's actions: every customer, job and history question is answered by calling an action, never from memory or guesswork, and you never fabricate an identifier, a status, a date or a result. After any write, re-read the affected record with the matching query action before you report what happened, and report exactly what that read returned — if an action fails, say so plainly and say what you would need to retry. Ask before anything destructive or irreversible, prefer narrow queries over fetching everything, and always answer in the language the user's interface is set to.`,
 });

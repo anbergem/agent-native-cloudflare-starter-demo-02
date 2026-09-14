@@ -56,7 +56,7 @@ the Cloudflare credentials has a working default.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `D1_DATABASE` | `example-jobs-production` | Database to export |
+| `D1_DATABASE` | `acme-ops-production` | Database to export |
 | `WRANGLER_ENV` | `production` | Wrangler environment holding that binding |
 | `BACKUP_DIR` | `backups` | Where the dump is written before upload |
 | `BACKUP_AGE_RECIPIENT` | – | `age` public key; when set the gzip is encrypted and the plaintext deleted |
@@ -100,7 +100,7 @@ directory, which is deleted on exit, so `.wrangler/state` is untouched.
 
 ```bash
 # a plain, gzipped, or age-encrypted dump; set BACKUP_AGE_IDENTITY for .age input
-bash scripts/restore-d1-check.sh backups/example-jobs-production-20260907-030000-f16b25d.sql.gz
+bash scripts/restore-d1-check.sh backups/acme-ops-production-20260907-030000-f16b25d.sql.gz
 ```
 
 It decompresses (and decrypts), repeats the content checks, imports the SQL, and prints a row
@@ -121,7 +121,7 @@ To rehearse without production data, export the local database and restore-check
 
 ```bash
 pnpm db:reset
-pnpm exec wrangler d1 export example-jobs-local --local --output /tmp/local.sql
+pnpm exec wrangler d1 export acme-ops-local --local --output /tmp/local.sql
 bash scripts/restore-d1-check.sh /tmp/local.sql
 ```
 
@@ -135,12 +135,12 @@ Never import a dump over a live database. Create a new one, verify it, then move
    whose test restore fails; take the next one.
 3. **Create the new database** and note its id:
    ```bash
-   pnpm exec wrangler d1 create example-jobs-production-restored --jurisdiction eu
+   pnpm exec wrangler d1 create acme-ops-production-restored --jurisdiction eu
    ```
 4. **Import the dump** (decompress first; the plain `.sql` is what `--file` takes):
    ```bash
    gzip -dc backups/<file>.sql.gz > /tmp/restore.sql
-   pnpm exec wrangler d1 execute example-jobs-production-restored --remote --file /tmp/restore.sql
+   pnpm exec wrangler d1 execute acme-ops-production-restored --remote --file /tmp/restore.sql
    ```
 5. **Bring the schema forward** if `d1_migrations` in the dump is behind `migrations/`. Point
    the production binding at the new id first (step 6), then run

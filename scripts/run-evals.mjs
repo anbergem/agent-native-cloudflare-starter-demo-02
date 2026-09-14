@@ -6,7 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const temporary = mkdtempSync(path.join(tmpdir(), "example-jobs-evals-"));
+const temporary = mkdtempSync(path.join(tmpdir(), "acme-ops-evals-"));
 const databaseUrl = `file:${path.join(temporary, "evals.db")}`;
 const env = {
   ...process.env,

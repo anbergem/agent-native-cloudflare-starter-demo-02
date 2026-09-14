@@ -1,7 +1,7 @@
 {
-  "name": "Example Jobs",
-  "short_name": "Example Jobs",
-  "description": "Workspace app for Example Jobs.",
+  "name": "Acme Ops",
+  "short_name": "Acme Ops",
+  "description": "Workspace app for Acme Ops.",
   "start_url": "./home",
   "background_color": "#111111",
   "theme_color": "#18181B",

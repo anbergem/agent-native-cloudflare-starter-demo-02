@@ -83,7 +83,7 @@ So if `pnpm dev:worker` gives you a sign-in page that rejects every password, th
 is an unseeded database rather than a wrong one — no account exists to sign in to. Check with:
 
 ```bash
-pnpm exec wrangler d1 execute example-jobs-local --local --command "SELECT count(*) FROM user"
+pnpm exec wrangler d1 execute acme-ops-local --local --command "SELECT count(*) FROM user"
 ```
 
 Zero means run `pnpm db:seed:worker` while `pnpm dev:worker` is up. The seed password is the

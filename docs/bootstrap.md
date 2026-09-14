@@ -128,7 +128,7 @@ gh auth status
 
 ### 5. Rename the application
 
-The sample ships as `example-jobs` / "Example Jobs" (D18). Replace both:
+The sample ships as `acme-ops` / "Acme Ops" (D18). Replace both:
 
 ```bash
 node scripts/rename-app.mjs --name acme-ops --display "Acme Ops"
@@ -136,7 +136,7 @@ node scripts/rename-app.mjs --name acme-ops --display "Acme Ops"
 
 It prints every file it changed. `--dry-run` lists them without writing. It deliberately
 leaves `docs/plan/**` alone: that directory is the implementation plan, a historical record
-whose text states that the sample was called `example-jobs`.
+whose text states that the sample was called `acme-ops`.
 
 Then finish the package metadata by hand — the script sets `name`, but `description` is prose:
 

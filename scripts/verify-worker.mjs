@@ -151,15 +151,13 @@ export async function main(args = process.argv.slice(2)) {
     throw new Error("--port must be 1..65535");
   await assertPortAvailable(port);
 
-  const temporary = mkdtempSync(
-    path.join(tmpdir(), "example-jobs-worker-smoke-"),
-  );
+  const temporary = mkdtempSync(path.join(tmpdir(), "acme-ops-worker-smoke-"));
   const persistPath = path.join(temporary, "wrangler-state");
   const configPath = path.join(temporary, "wrangler.json");
   const sqlPath = path.join(temporary, "scenario.sql");
   const baseUrl = `http://127.0.0.1:${port}`;
   const config = {
-    name: "example-jobs-smoke",
+    name: "acme-ops-smoke",
     main: path.join(repoRoot, "dist/_worker.js/index.js"),
     compatibility_date: "2026-09-05",
     compatibility_flags: ["nodejs_compat"],
@@ -178,7 +176,7 @@ export async function main(args = process.argv.slice(2)) {
     d1_databases: [
       {
         binding: "DB",
-        database_name: "example-jobs-smoke-local",
+        database_name: "acme-ops-smoke-local",
         database_id: "00000000-0000-0000-0000-000000000000",
         migrations_dir: path.join(repoRoot, "migrations"),
       },
@@ -197,7 +195,7 @@ export async function main(args = process.argv.slice(2)) {
       "d1",
       "migrations",
       "apply",
-      "example-jobs-smoke-local",
+      "acme-ops-smoke-local",
       "--local",
       "--persist-to",
       persistPath,
@@ -256,7 +254,7 @@ export async function main(args = process.argv.slice(2)) {
       "wrangler",
       "d1",
       "execute",
-      "example-jobs-smoke-local",
+      "acme-ops-smoke-local",
       "--local",
       "--persist-to",
       persistPath,
