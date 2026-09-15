@@ -38,5 +38,18 @@ jobs:
         run: >-
           node scripts/seed.mjs --target d1-remote --env staging --reset
           --base-url "$STAGING_URL"
-      - name: After the reset — the smoke's preconditions
-        run: node .github/diagnose-staging.mjs
+      # `wrangler tail` streams what the Worker logs and throws while the probe
+      # runs, which is the one view we have not had of the hang.
+      - name: After the reset — the smoke's preconditions, with a tail attached
+        run: |
+          pnpm exec wrangler tail --env staging --format json > "$RUNNER_TEMP/tail.json" 2>"$RUNNER_TEMP/tail.err" &
+          TAIL_PID=$!
+          sleep 12
+          node .github/diagnose-staging.mjs || true
+          sleep 5
+          kill "$TAIL_PID" 2>/dev/null || true
+          echo "=== worker tail (first 60 events) ==="
+          head -c 12000 "$RUNNER_TEMP/tail.json" || true
+          echo
+          echo "=== tail stderr ==="
+          head -c 1000 "$RUNNER_TEMP/tail.err" || true
