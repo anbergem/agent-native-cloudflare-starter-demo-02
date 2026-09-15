@@ -42,14 +42,15 @@ jobs:
       # runs, which is the one view we have not had of the hang.
       - name: After the reset — the smoke's preconditions, with a tail attached
         run: |
-          pnpm exec wrangler tail --env staging --format json > "$RUNNER_TEMP/tail.json" 2>"$RUNNER_TEMP/tail.err" &
+          pnpm exec wrangler tail --env staging --format json 2>"$RUNNER_TEMP/tail.err" \
+            | jq -c '{method: .event.request.method, url: (.event.request.url // "" | sub("^https?://[^/]+"; "")), outcome: .outcome, exceptions: [.exceptions[]?.message], logs: [.logs[]?.message[0]?]}' > "$RUNNER_TEMP/tail.json" &
           TAIL_PID=$!
           sleep 12
           node .github/diagnose-staging.mjs || true
           sleep 5
           kill "$TAIL_PID" 2>/dev/null || true
-          echo "=== worker tail (first 60 events) ==="
-          head -c 12000 "$RUNNER_TEMP/tail.json" || true
+          echo "=== worker tail: every request it saw ==="
+          cat "$RUNNER_TEMP/tail.json" || true
           echo
           echo "=== tail stderr ==="
           head -c 1000 "$RUNNER_TEMP/tail.err" || true
