@@ -1,0 +1,29 @@
+# Throwaway diagnostic. Delete once the staging smoke passes.
+#
+# `create-job` and `agent-chat` time out from a GitHub runner while the very
+# same calls answer in under 500ms from a developer machine, and `auth/login` —
+# also a POST, also a write — succeeds from the runner. This job runs the same
+# requests from a runner and reports, for each, the status, the elapsed time and
+# the `cf-ray` header, whose suffix names the Cloudflare colo that served it.
+name: Diagnose staging
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: diagnose-staging
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: staging
+    env:
+      SEED_PASSWORD: ${{ secrets.SEED_PASSWORD }}
+      STAGING_URL: ${{ vars.STAGING_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Where is this runner, and what answers
+        run: node .github/diagnose-staging.mjs
