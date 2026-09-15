@@ -34,16 +34,14 @@ jobs:
         run: |
           pnpm exec wrangler d1 info acme-ops-staging --env staging || true
           pnpm exec wrangler d1 list --json | jq -c '.[] | {name, uuid, created_at}' || true
-      - name: 1. Baseline — no reset
-        run: node .github/diagnose-staging.mjs
-      # The reset has two halves: a bulk `wrangler d1 execute --remote` of the
-      # scenario SQL, and five user registrations driven through the Worker.
-      # Run them separately to see which one stops writes completing.
-      - name: 2. Reset SQL only (--skip-users), then probe
+      - name: Tail the Worker across one first write
         run: |
-          node scripts/seed.mjs --target d1-remote --env staging --reset --skip-users
-          node .github/diagnose-staging.mjs
-      - name: 3. Full reset (SQL + user registrations), then probe
-        run: |
-          node scripts/seed.mjs --target d1-remote --env staging --reset --base-url "$STAGING_URL"
-          node .github/diagnose-staging.mjs
+          pnpm exec wrangler tail --env staging --format json 2>"$RUNNER_TEMP/t.err" \
+            | jq --unbuffered -c '{u: (.event.request.url // "" | sub("^https?://[^/]+"; "")), o: .outcome, ex: [.exceptions[]?.message], lg: [.logs[]?.message[0]?]}' \
+            | tee "$RUNNER_TEMP/tail.ndjson" &
+          sleep 15
+          node .github/diagnose-firstwrite.mjs || true
+          sleep 20
+          pkill -f "wrangler tail" || true
+          echo "=== what the Worker saw ==="
+          cat "$RUNNER_TEMP/tail.ndjson" || true
