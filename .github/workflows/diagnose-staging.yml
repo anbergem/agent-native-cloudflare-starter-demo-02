@@ -30,6 +30,10 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: 0. What and where is this database
+        run: |
+          pnpm exec wrangler d1 info acme-ops-staging --env staging || true
+          pnpm exec wrangler d1 list --json | jq -c '.[] | {name, uuid, created_at}' || true
       - name: 1. Baseline — no reset
         run: node .github/diagnose-staging.mjs
       # The reset has two halves: a bulk `wrangler d1 execute --remote` of the
