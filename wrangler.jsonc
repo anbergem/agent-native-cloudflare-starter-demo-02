@@ -48,13 +48,13 @@
       "d1_databases": [
         {
           "binding": "DB",
-          // Recreated 2026-09-15 with `--location enam` and no jurisdiction pin.
-          // The original sat in EEUR, so every CI request crossed the Atlantic
-          // and the staging smoke could not finish a write. Staging holds only
-          // the synthetic scenario, so there is nothing to keep resident;
-          // production stays pinned to the EU.
-          "database_name": "acme-ops-staging-2",
-          "database_id": "194d832a-d9cd-4b37-9510-e31949cad02b",
+          // Recreated 2026-09-15 with `--location enam` and no jurisdiction pin,
+          // reusing the name. The original sat in EEUR, so every CI request
+          // crossed the Atlantic and the staging smoke could not finish a write.
+          // Staging holds only the synthetic scenario, so there is nothing to
+          // keep resident; production stays pinned to the EU.
+          "database_name": "acme-ops-staging",
+          "database_id": "ccbfda85-e6cf-4f46-b6bc-717485eabb1f",
           "migrations_dir": "migrations",
         },
       ],

@@ -17,7 +17,7 @@
     "db:reset": "node scripts/reset-local.mjs",
     "db:seed": "node scripts/seed.mjs --target node",
     "db:seed:worker": "node scripts/seed.mjs --target d1-local",
-    "db:migrate:staging": "wrangler d1 migrations apply acme-ops-staging-2 --remote --env staging",
+    "db:migrate:staging": "wrangler d1 migrations apply acme-ops-staging --remote --env staging",
     "db:migrate:production": "wrangler d1 migrations apply acme-ops-production --remote --env production",
     "deploy:staging": "wrangler deploy --env staging",
     "deploy:production": "wrangler deploy --env production",
