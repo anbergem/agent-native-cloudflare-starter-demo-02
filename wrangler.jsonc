@@ -63,6 +63,15 @@
         "AGENT_NATIVE_BUILD_ENGINE_PACKAGES": "[\"ai\",\"@ai-sdk/anthropic\"]",
         "AUTH_REQUIRE_EMAIL_VERIFICATION": "0",
         "SEED_ENABLED": "1",
+        // TEMPORARY DIAGNOSTIC — remove once answered (DISCREPANCIES.md, 2026-09-16).
+        // Single-variable test of the lost action reply. The framework audits every
+        // mutating action and no read-only one, and awaits `insertAuditEvent` before
+        // answering (core `audit/record.js:136`). That maps exactly onto what the
+        // measurements show: GETs never hang, unauthenticated POSTs never hang, and
+        // an authenticated command hangs whether it succeeds or is refused with 400 —
+        // the audit row being the only write the refused path still performs.
+        // `"false"` exactly; `isAuditDisabled()` compares the literal string.
+        "AGENT_NATIVE_AUDIT_ENABLED": "false",
         "AGENT_NATIVE_AUDIT_RETENTION_DAYS": "365",
       },
       "d1_databases": [
