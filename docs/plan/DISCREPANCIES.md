@@ -2227,3 +2227,50 @@ over the public internet.
 Resolution: 2026-09-15 — applied; `pnpm check` and `pnpm verify:worker` (12/12) pass. Whether 45s
 is enough is not proven: the next staging run is the test, and if `create-job` still exceeds it
 the problem is not cold-start latency and the hunt resumes with better numbers than before.
+
+---
+
+## 2026-09-16 — The lost action reply: what it is not, and the one line that describes it
+
+Measured, not inferred. Every count below is ten consecutive `curl` calls from a laptop in Oslo
+against deployed staging, each its own process and its own connection.
+
+```
+GET  /_agent-native/actions/list-jobs          answered=10  no-response=0
+POST /_agent-native/auth/login   (wrong pw)    answered=10  no-response=0
+POST /_agent-native/actions/no-such-action     answered=10  no-response=0   (404, no handler)
+POST /mcp                                      answered=10  no-response=0
+POST /_agent-native/actions/create-job  {}     answered=3   no-response=7   (400, writes nothing)
+POST /_agent-native/actions/create-job  valid  answered=8   no-response=2   (200)
+```
+
+**A POST that reaches a registered action handler intermittently never answers.** Nothing else
+does. The request body is fully sent — `upload completely sent off: 2 bytes` — and then not one
+byte comes back until the client gives up. A successful reply, when it arrives, is an ordinary
+`content-length: 478`: no chunking, no compression, nothing streamed.
+
+Refuted today, each by a direct measurement rather than an argument:
+
+| Theory | How it died |
+| --- | --- |
+| The GitHub runner, or the runner→Cloudflare path | Reproduces from a laptop, same smoke, same failures |
+| Node's `fetch` | `curl` loses replies at the same rate |
+| HTTP/2 | `--http1.1` loses them too (4/5 vs 1/5, and 3/5 on a repeat — noise, not a split) |
+| Database location or identity | A brand-new database in Europe behaves identically |
+| The write path | A request refused with 400 before any write hangs *more* often than a 200 |
+| Connection reuse | Every probe is a separate process and a separate connection |
+
+Two theories from earlier today also died, both mine:
+
+- **Duplicate dev servers.** There really were two `wrangler dev` processes on 8787 —
+  `pkill -f "wrangler dev"` matches nothing, because the command line reads `wrangler.js dev`.
+  Killed properly, verified one listener, and the local hang reproduced unchanged.
+- **Database state.** A reset-and-reseed appeared to fix it, so the entry above concluded the
+  failure was a function of accumulated rows. It is not: 120 consecutive `create-job` writes
+  (6-9ms each) and six consecutive full smoke runs against the same growing local database were
+  all green. The reset coincided with the recovery; it did not cause it. Recorded here because
+  that entry was wrong and is cited elsewhere.
+
+What stands: the fault is inside the Worker's action-invocation path, it is reachable from
+anywhere, and it is independent of what the action does. That is a narrow enough statement to
+carry to Cloudflare and to Builder.io, which is the next step rather than a seventh theory.
