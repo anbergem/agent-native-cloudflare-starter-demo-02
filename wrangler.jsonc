@@ -54,7 +54,7 @@
           // Staging holds only the synthetic scenario, so there is nothing to
           // keep resident; production stays pinned to the EU.
           "database_name": "acme-ops-staging",
-          "database_id": "ccbfda85-e6cf-4f46-b6bc-717485eabb1f",
+          "database_id": "6e9d7a93-dae0-4bc5-a178-70d7d5f976e9",
           "migrations_dir": "migrations",
         },
       ],
